@@ -33,3 +33,4 @@ build/
 .vscode/
 video-api.env
 docker-compose.override.yml
+.env

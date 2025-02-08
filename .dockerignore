@@ -1,0 +1,18 @@
+# Ignore the .git directory and any version control files
+.git
+.gitignore
+
+# Ignore the target directory (compiled code)
+target/
+
+# Ignore Maven local repository if copied by mistake
+.mvn/
+
+# Ignore environment files (secrets should not be in the image)
+.env
+
+# Ignore IDE/editor configuration files
+.idea/
+*.iml
+*.vscode/
+
