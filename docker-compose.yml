@@ -3,6 +3,7 @@ version: '3.8'
 services:
   video-api-app:
     build: .
+    image: video-api:latest
     container_name: video-api-app
     ports:
       - "8080:8080"

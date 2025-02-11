@@ -7,13 +7,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import br.com.fiap.soat7.grupo18.videoapi.dto.VideoResponseDTO;
+import br.com.fiap.soat7.grupo18.videoapi.mongo.document.User;
 import br.com.fiap.soat7.grupo18.videoapi.service.VideoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -24,7 +24,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/video")
 @Tag(name = "Video API", description = "API de Vídeos")
-public class VideoRestHandler {
+public class VideoRestHandler extends AuthRestHandler {
 
     @Autowired
     private VideoService videoService;
@@ -34,10 +34,10 @@ public class VideoRestHandler {
     @ApiResponse(responseCode = "200", description = "Sucesso", content = @Content(mediaType = "application/json" , schema = @Schema(implementation = VideoResponseDTO.class)))
     @ApiResponse(responseCode = "400", description = "Dados inválidos")
     @ApiResponse(responseCode = "413", description = "Tamanho do arquivo excede o limite", content = @Content(mediaType = "text/plain"))
-    public ResponseEntity<VideoResponseDTO> handleVideo(@RequestParam("video") MultipartFile videoFile,
-                                                @RequestParam("notificationEmail") String notificationEmail,
-                                                @RequestHeader(value = "USER", required = true) String user) throws Exception {
-        var response = videoService.save(videoFile, notificationEmail, user);
+    public ResponseEntity<VideoResponseDTO> handleVideo(@RequestParam("video") MultipartFile videoFile) throws Exception {
+        
+        User user = getAuthenticatedUser();
+        var response = videoService.save(videoFile, user.getEmail(), user.getUserName());
         return ResponseEntity.ok(response);
     }
 
@@ -52,11 +52,12 @@ public class VideoRestHandler {
     }
 
     @GetMapping(produces = "application/json")
-    @Operation(description = "Lista todos os vídeos de um usuário")
+    @Operation(description = "Lista todos os vídeos do usuário")
     @ApiResponse(responseCode = "200", description = "Sucesso", content = @Content(mediaType = "application/json" , schema = @Schema(implementation = List.class)))
     @ApiResponse(responseCode = "400", description = "Dados inválidos")
-    public ResponseEntity<List<VideoResponseDTO>> getVideosByUser(@RequestHeader(value = "USER", required = true) String user) {
-        var response = videoService.findAllByUser(user);
+    public ResponseEntity<List<VideoResponseDTO>> getVideosByUser() {
+        User user = getAuthenticatedUser();
+        var response = videoService.findAllByUser(user.getUserName());
         return ResponseEntity.ok(response);
     }
 }

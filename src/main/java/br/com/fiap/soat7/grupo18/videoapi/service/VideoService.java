@@ -29,24 +29,27 @@ public class VideoService {
     private VideoMongoRepository videoRepository;
 
     @Autowired
+    private QueueService queueService;
+
+    @Autowired
     private S3Service s3Service;
 
     /**
      * 
      * @param videoFile
      * @param notificationEmail
-     * @param user
+     * @param userName
      * @return
      * @throws Exception
      */
     @Transactional
-    public VideoResponseDTO save(MultipartFile videoFile, String notificationEmail, String user) throws Exception {
+    public VideoResponseDTO save(MultipartFile videoFile, String notificationEmail, String userName) throws Exception {
         
         if (videoFile == null){
             throw new RequiredDataException("Vídeo não enviado");
         }
         
-        if (StringUtils.isBlank(user)){
+        if (StringUtils.isBlank(userName)){
             throw new RequiredDataException("Usuário não informado");
         }
 
@@ -54,7 +57,7 @@ public class VideoService {
             throw new RequiredDataException("E-mail de notificação não informado");
         }
 
-        String userName = new String(user).toUpperCase();
+        String userNameUpper = new String(userName).toUpperCase();
         String fileName = videoFile.getOriginalFilename();
 
 
@@ -66,7 +69,7 @@ public class VideoService {
 
         var video = Video.builder()
                 .notificationEmail(notificationEmail)
-                .user(userName)
+                .user(userNameUpper)
                 .sizeInBytes(fileSizeInBytes)
                 .fileName(fileName)
                 .status(VideoStatusEnum.EM_PROCESSAMENTO)
@@ -78,12 +81,26 @@ public class VideoService {
         video.setS3Filename(s3Filename);
         video = videoRepository.save(video); //atualiza o registro com o nome do arquivo no S3
 
+        //chamar fila
+        queueService.sendToQueueAsync(video.getVideoId());
+
         return VideoResponseDTO.builder()
                     .id(video.getVideoId())
                     .fileName(video.getFileName())
                     .status(video.getStatus())
                     .build();
     }
+
+    //find video by id
+    public Video getVideo(String videoId) {
+        if (StringUtils.isBlank(videoId)){
+            throw new RequiredDataException("ID do vídeo não informado");
+        }
+
+        var video = videoRepository.findById(videoId).orElseThrow(() -> new NotFoundException("Vídeo não encontrado"));
+        return video;
+    }
+
 
     public VideoResponseDTO getVideoS3Url(String videoId) {
         if (StringUtils.isBlank(videoId)){

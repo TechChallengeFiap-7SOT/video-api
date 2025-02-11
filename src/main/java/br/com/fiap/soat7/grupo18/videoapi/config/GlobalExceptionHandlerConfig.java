@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import br.com.fiap.soat7.grupo18.videoapi.exception.NotFoundException;
 import br.com.fiap.soat7.grupo18.videoapi.exception.RequiredDataException;
+import br.com.fiap.soat7.grupo18.videoapi.exception.UserNotFoundException;
 
 @ControllerAdvice
 public class GlobalExceptionHandlerConfig {
@@ -36,6 +37,12 @@ public class GlobalExceptionHandlerConfig {
     @ResponseBody
     public ResponseEntity<String> handleNotFoundException(NotFoundException nfe){
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(nfe.getMessage());
+    }
+
+    @ExceptionHandler({UserNotFoundException.class})
+    @ResponseBody
+    public ResponseEntity<String> handleUserNotFoundException(UserNotFoundException nfe){
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     @ExceptionHandler({MissingRequestHeaderException.class})
