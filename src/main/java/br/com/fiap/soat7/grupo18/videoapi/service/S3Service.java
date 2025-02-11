@@ -40,7 +40,7 @@ public class S3Service {
     private S3Client s3Client;
 
     @PostConstruct
-    void init(){
+    public void init(){
         s3Client = S3Client.builder()
                 .region(Region.of(defaultRegion))
                 .credentialsProvider(DefaultCredentialsProvider.create())
